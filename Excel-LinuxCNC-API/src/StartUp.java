@@ -1,29 +1,40 @@
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
+/**
+ * ARGS: logfile colnumber exceloutput interval(sec)
+ * @author Yu-Ting
+ *
+ */
 public class StartUp {
 
+	private final static int _ARGS = 4;
+	
 	public static void main(String[] args) {
-		if (args.length != 2) {
-			System.out.println("You need 2 arguments.");
+		if (args.length != _ARGS) {
+			System.out.println("ARGS: logfile colnumber exceloutput interval(sec)");
+			System.out.println("You need " + _ARGS + " arguments.");
 		} else {
 			String fileName = args[0];
 			int colno = Integer.valueOf(args[1]);
+			String excelOutput = args[2];
+			int interval = Integer.valueOf(args[3]);
 			
 			String preString = ProcessFrontEnd(fileName);
 			
-			String[] delim = Delimiter(preString, "[,\r\n]", colno);
-			if (delim == null) {
+			ArrayList<String> totalElement = Delimiter(preString, colno);
+			if (totalElement.size() == 0) {
 				System.out.println("Process exit 1\n");
 			}
 			
-			ProcessBackEnd(delim, colno);
+			ProcessBackEnd(totalElement, colno, excelOutput, interval);
 		}
 	}
 
-	private static void ProcessBackEnd(String[] delim, int colno) {
+	private static void DebugProcessBackEnd(String[] delim, int colno) {
 		for (int i=0; i < (delim.length/colno); i++) {
 			for (int every=0; every < colno; every++) {
 				// System.out.print(delim[i*colno+every] + " ");
@@ -32,15 +43,80 @@ public class StartUp {
 			System.out.println();
 		}
 	}
-
-	private static String[] Delimiter(String preString, String delimiter, int colno) {
-		String[] delim = preString.split(delimiter);
-		if ((delim.length % colno) != 0) {
-			System.err.println("The content should be a multiple of " + colno + ".\n");
-			return null;
+	
+	private static void ProcessBackEnd(ArrayList<String> totalElement, int colno, String output, int interval) {
+		ExcelPOI_API api = new ExcelPOI_API(output).init();
+		int lines = totalElement.size()/colno;
+		
+		for (int i=0; i < lines; i++) {
+			for (int every=0; every < colno; every++) {
+				// System.out.print(delim[i*colno+every] + " ");
+				// GoToExcelPOI(i*colno+every, delim[i*colno+every], colno);
+				api.insertCell(i, every, totalElement.get(i*colno+every));
+			}
 		}
 		
-		return delim;
+		drawOutHeader(colno, api);
+		
+		int group_no = 1;
+		int write_count = 0;
+		int peek_count = 0;
+		int read_count = 0;
+		int timeInterval_start = Integer.valueOf(totalElement.get(2));
+		for (int i=0; i < lines; i++) {
+			// Same
+			if (timeInterval_start == Integer.valueOf(totalElement.get(i*colno+2))) {
+				if (totalElement.get(i*colno+4).equals("Write") == true)
+					write_count++;
+				else if (totalElement.get(i*colno+4).equals("Peek") == true)
+					peek_count++;
+				else if (totalElement.get(i*colno+4).equals("Read") == true)
+					read_count++;
+			} else {
+			// Not Same (Output)
+				dumpOutToExcel(write_count, peek_count, read_count, colno, group_no, api);
+				timeInterval_start++;
+				i--;
+				
+				write_count = 0;
+				peek_count = 0;
+				read_count = 0;
+				group_no++;
+			}
+		}
+		
+		dumpOutToExcel(write_count, peek_count, read_count, colno, group_no, api);
+		
+		api.WriteAndClose();
+	}
+
+	private static void drawOutHeader(int colno, ExcelPOI_API api) {
+		api.insertCell(1, colno+2, "Group");
+		api.insertCell(2, colno+2, "Write");
+		api.insertCell(2+1, colno+2, "Peek");
+		api.insertCell(2+2, colno+2, "Read");
+	}
+
+	private static void dumpOutToExcel(int write_count, int peek_count, int read_count, int colno, int group_no, ExcelPOI_API api) {
+		api.insertCell(1, colno+2+group_no, String.valueOf(group_no));
+		api.insertCell(2, colno+2+group_no, String.valueOf(write_count));
+		api.insertCell(2+1, colno+2+group_no, String.valueOf(peek_count));
+		api.insertCell(3+1, colno+2+group_no, String.valueOf(read_count));
+	}
+
+	private static ArrayList<String> Delimiter(String preString, int colno) {		
+		String[] lines = preString.split("\r\n");
+		String[] line = null;
+		ArrayList<String> total = new ArrayList<>();
+		
+		for (int i=0; i < lines.length; i++) {
+			line = lines[i].trim().split(",");
+			for (int e=0; e < line.length; e++) {
+				total.add(line[e].trim());
+			}
+		}
+		
+		return total;
 	}
 
 	private static String ProcessFrontEnd(String fileName) {
