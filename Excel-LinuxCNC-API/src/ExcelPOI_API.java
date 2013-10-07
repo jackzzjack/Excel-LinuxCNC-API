@@ -1,6 +1,7 @@
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.poi.ss.usermodel.Chart;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -19,7 +20,6 @@ import org.apache.poi.ss.usermodel.charts.ScatterChartData;
 import org.apache.poi.ss.usermodel.charts.ValueAxis;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 
 public class ExcelPOI_API {
 	
@@ -47,11 +47,51 @@ public class ExcelPOI_API {
 			rowRow = sheet.createRow(row);
 		}
 		
-		rowRow.createCell(col).setCellValue(createHelper.createRichTextString(val));
+		rowRow.createCell(col).setCellValue(val);
+	}
+	
+	public void insertCell(int row, int col, int val) {
+		Row rowRow = sheet.getRow(row);
+		
+		if (rowRow == null) {
+			rowRow = sheet.createRow(row);
+		}
+		
+		rowRow.createCell(col).setCellValue(val);
+	}
+	
+	public void insertCell(int row, int col, boolean val) {
+		Row rowRow = sheet.getRow(row);
+		
+		if (rowRow == null) {
+			rowRow = sheet.createRow(row);
+		}
+		
+		rowRow.createCell(col).setCellValue(val);
+	}
+	
+	public void insertCell(int row, int col, double val) {
+		Row rowRow = sheet.getRow(row);
+		
+		if (rowRow == null) {
+			rowRow = sheet.createRow(row);
+		}
+		
+		rowRow.createCell(col).setCellValue(val);
+	}
+	
+	public void insertCell(int row, int col, Date val) {
+		Row rowRow = sheet.getRow(row);
+		
+		if (rowRow == null) {
+			rowRow = sheet.createRow(row);
+		}
+		
+		rowRow.createCell(col).setCellValue(val);
 	}
 	
 	public void WriteAndClose() {
-		createChart();
+		// createChart();
 		
 		FileOutputStream FOS = null;
 		
