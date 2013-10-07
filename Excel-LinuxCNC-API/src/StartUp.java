@@ -3,7 +3,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-
 /**
  * ARGS: logfile colnumber exceloutput interval(sec)
  * @author Yu-Ting
@@ -75,7 +74,11 @@ public class StartUp {
 			} else {
 			// Not Same (Output)
 				dumpOutToExcel(write_count, peek_count, read_count, colno, group_no, api);
-				timeInterval_start++;
+				if (timeInterval_start == 60)
+					timeInterval_start = 0;
+				else
+					timeInterval_start++;
+				
 				i--;
 				
 				write_count = 0;
@@ -98,14 +101,14 @@ public class StartUp {
 	}
 
 	private static void dumpOutToExcel(int write_count, int peek_count, int read_count, int colno, int group_no, ExcelPOI_API api) {
-		api.insertCell(1, colno+2+group_no, String.valueOf(group_no));
-		api.insertCell(2, colno+2+group_no, String.valueOf(write_count));
-		api.insertCell(2+1, colno+2+group_no, String.valueOf(peek_count));
-		api.insertCell(3+1, colno+2+group_no, String.valueOf(read_count));
+		api.insertCell(1, colno+2+group_no, Integer.valueOf(group_no));
+		api.insertCell(2, colno+2+group_no, Integer.valueOf(write_count));
+		api.insertCell(2+1, colno+2+group_no, Integer.valueOf(peek_count));
+		api.insertCell(3+1, colno+2+group_no, Integer.valueOf(read_count));
 	}
 
 	private static ArrayList<String> Delimiter(String preString, int colno) {		
-		String[] lines = preString.split("\r\n");
+		String[] lines = preString.split("[\r\n]");
 		String[] line = null;
 		ArrayList<String> total = new ArrayList<>();
 		
